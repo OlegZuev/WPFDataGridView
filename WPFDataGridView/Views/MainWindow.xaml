@@ -1,0 +1,21 @@
+﻿<Window x:Class="WPFDataGridView.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WPFDataGridView"
+        xmlns:views="clr-namespace:WPFDataGridView.Views"
+        mc:Ignorable="d"
+        ResizeMode="CanMinimize"
+        Title="Работа с данными в табличном представлении" Height="450" Width="500" FontSize="16">
+    <Grid>
+        <TabControl>
+            <TabItem Header="Books" MinWidth="100">
+                <Frame Source="BooksPage.xaml"/>
+            </TabItem>
+            <TabItem Header="Publishers" MinWidth="100">
+                <Frame Source="PublishersPage.xaml"/>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
