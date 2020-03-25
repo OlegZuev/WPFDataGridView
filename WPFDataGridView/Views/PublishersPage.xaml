@@ -18,7 +18,8 @@
         <converters:EventArgsConverter x:Key="EventArgsConverter"/>
     </Page.Resources>
     <Grid>
-        <DataGrid x:Name="DataGrid" ItemsSource="{Binding Publishers}" AutoGenerateColumns="False">
+        <DataGrid x:Name="DataGrid" ItemsSource="{Binding Publishers}" AutoGenerateColumns="False" SelectionMode="Single">
+            <!-- Столбцы, которые отображают информацию о издателе -->
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Name" Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
                                     ElementStyle="{StaticResource TextBlockValidator}"
@@ -29,10 +30,12 @@
                                     Width="*"/>
             </DataGrid.Columns>
 
+            <!-- Валидатор-заглушка для отображение ошибок через ReactiveValidator -->
             <DataGrid.RowValidationRules>
                 <validators:PublisherValidator ValidatesOnTargetUpdated="True" ValidationStep="UpdatedValue" />
             </DataGrid.RowValidationRules>
 
+            <!-- Значок ошибки слева от строки -->
             <DataGrid.RowValidationErrorTemplate>
                 <ControlTemplate>
                     <Grid Margin="0,-2,0,-2"
@@ -48,6 +51,7 @@
                 </ControlTemplate>
             </DataGrid.RowValidationErrorTemplate>
 
+            <!-- Обработка событий DataGrid -->
             <b:Interaction.Triggers>
                 <b:EventTrigger EventName="AddingNewItem">
                     <b:InvokeCommandAction Command="{Binding DataGridAddingNewItemCommand}"

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using WPFDataGridView.Models;
@@ -32,6 +33,7 @@ namespace WPFDataGridView.ViewModels {
             var semaphore = new Semaphore(0, 1, "PublishersInitialion");
             semaphore.WaitOne();
             PublishersInitialized?.Invoke(Publishers);
+            semaphore.Dispose();
         }
 
         public ICommand DataGridAddingNewItemCommand { get; set; }
@@ -59,9 +61,20 @@ namespace WPFDataGridView.ViewModels {
                     sender.CancelEdit();
                     return;
                 case Key.Delete:
-                    ((IList<object>) sender.SelectedItems)
-                        .Where(item => item is Publisher).ToList()
-                        .ForEach(book => _tableInteraction.DeleteRowFromTable((Publisher) book));
+                    try {
+                        if (sender.SelectedItem is Publisher publisher) {
+                            _tableInteraction.DeleteRowFromTable(publisher);
+                        }
+                    } catch (Npgsql.PostgresException exception) {
+                        if (exception.SqlState == "23503") {
+                            MessageBox.Show("There are some books that link to this publisher. Delete them first.",
+                                            "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            e.Handled = true;
+                        } else {
+                            throw;
+                        }
+                    }
+
                     return;
             }
         }

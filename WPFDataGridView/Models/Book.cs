@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Text.RegularExpressions;
 using PropertyChanged;
 using ReactiveValidation;
 using ReactiveValidation.Extensions;
@@ -10,8 +11,17 @@ namespace WPFDataGridView.Models {
     [AddINotifyPropertyChangedInterface]
     public class Book : ValidatableObject, IEditableObject, ITable {
         public string ISBN { get; set; }
+        public void OnISBNChanged() {
+            if (ISBNUtils.IsValid(ISBN))
+                PublisherId = ISBNUtils.GetPublisherId(ISBN);
+        }
 
         public int PublisherId { get; set; }
+
+        public void OnPublisherIdChanged() {
+            ISBN = Regex.Replace(ISBN, @"(?<=[\d]{3}-\d+-)\d+",
+                                 PublisherId < 10 ? "0" + PublisherId : PublisherId.ToString());
+        }
 
         public string Name { get; set; }
 
@@ -58,7 +68,6 @@ namespace WPFDataGridView.Models {
             builder.RuleFor(book => book.ISBN)
                    .Must(isbn => publishers == null ||
                                  publishers.Any(publisher => publisher.Id == ISBNUtils.GetPublisherId(isbn)))
-                   
                    .WithMessage("Publisher that owns such ISBN does not exist")
                    .Must(isbn => books == null ||
                                  !books.Any(book => book != this && book.ISBN == isbn))

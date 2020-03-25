@@ -2,17 +2,20 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using WPFDataGridView.Models;
 
 namespace WPFDataGridView.ViewModels {
     public class BooksPageViewModel : BaseViewModel {
         public ObservableCollection<Book> Books { get; set; }
 
-        private ObservableCollection<Publisher> _publishers;
+        public ObservableCollection<Publisher> Publishers { get; set; }
 
         private readonly TableInteraction<Book> _tableInteraction;
 
@@ -30,9 +33,9 @@ namespace WPFDataGridView.ViewModels {
 
             var semaphore = new Semaphore(0, 1, "PublishersInitialion");
             PublishersPageViewModel.PublishersInitialized += publishers => {
-                _publishers = publishers;
+                Publishers = publishers;
                 foreach (Book book in Books) {
-                    book.InitializeValidator(Books, _publishers);
+                    book.InitializeValidator(Books, Publishers);
                 }
             };
             semaphore.Release();
@@ -42,6 +45,9 @@ namespace WPFDataGridView.ViewModels {
             PreviewKeyDownCommand = new DelegateCommand<object>(PreviewKeyDown);
 
             DataGridRowEditEndingCommand = new DelegateCommand<DataGridRowEditEndingEventArgs>(DataGridRowEditEnding);
+
+            DataGridCellEditEndingCommand =
+                new DelegateCommand<DataGridCellEditEndingEventArgs>(DataGridCellEditEnding);
         }
 
         public ICommand DataGridAddingNewItemCommand { get; set; }
@@ -50,9 +56,11 @@ namespace WPFDataGridView.ViewModels {
 
         public ICommand DataGridRowEditEndingCommand { get; set; }
 
+        public ICommand DataGridCellEditEndingCommand { get; set; }
+
         private void DataGridAddingNewItem(AddingNewItemEventArgs e) {
             e.NewItem = new Book {ReleaseDate = DateTime.Now};
-            ((Book) e.NewItem).InitializeValidator(Books, _publishers);
+            ((Book) e.NewItem).InitializeValidator(Books, Publishers);
         }
 
         private void PreviewKeyDown(object eventArgs) {
@@ -67,9 +75,10 @@ namespace WPFDataGridView.ViewModels {
                     sender.CancelEdit();
                     return;
                 case Key.Delete:
-                    ((IList<object>) sender.SelectedItems)
-                        .Where(item => item is Book).ToList()
-                        .ForEach(book => _tableInteraction.DeleteRowFromTable((Book) book));
+                    if (sender.SelectedItem is Book book) {
+                        _tableInteraction.DeleteRowFromTable(book);
+                    }
+
                     return;
             }
         }
@@ -78,12 +87,32 @@ namespace WPFDataGridView.ViewModels {
             if (e.EditAction == DataGridEditAction.Cancel || !(e.Row.Item is Book book) || !book.Validator.IsValid)
                 return;
 
-            book.PublisherId = ISBNUtils.GetPublisherId(book.ISBN);
             if (e.Row.IsNewItem) {
                 _tableInteraction.AddRowToTable(book);
             } else {
                 _tableInteraction.UpdateRowToTable(book);
             }
+        }
+
+        private static void DataGridCellEditEnding(DataGridCellEditEndingEventArgs e) {
+            if ((string) e.Column.Header != "Publisher") return;
+            var comboBox = (ComboBox) e.EditingElement;
+            double contentWidth = MeasureString(((Publisher) comboBox.SelectedItem).Name, comboBox).Width;
+            double headerWidth = MeasureString(e.Column.Header.ToString(), comboBox).Width;
+            e.Column.Width = (contentWidth > headerWidth ? contentWidth : headerWidth) + 12;
+        }
+        private static Size MeasureString(string candidate, Control element) {
+            var formattedText = new FormattedText(candidate,
+                                                  CultureInfo.CurrentCulture,
+                                                  FlowDirection.LeftToRight,
+                                                  new Typeface(element.FontFamily, element.FontStyle,
+                                                               element.FontWeight, element.FontStretch),
+                                                  element.FontSize,
+                                                  Brushes.Black,
+                                                  new NumberSubstitution(),
+                                                  1);
+
+            return new Size(formattedText.Width, formattedText.Height);
         }
     }
 }

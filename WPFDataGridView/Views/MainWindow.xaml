@@ -7,7 +7,7 @@
         xmlns:views="clr-namespace:WPFDataGridView.Views"
         mc:Ignorable="d"
         ResizeMode="CanMinimize"
-        Title="Работа с данными в табличном представлении" Height="450" Width="500" FontSize="16">
+        Title="Работа с данными в табличном представлении" Height="450" Width="600" FontSize="16">
     <Grid>
         <TabControl>
             <TabItem Header="Books" MinWidth="100">

@@ -99,6 +99,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Converters\EventArgsConverter.cs" />
+    <Compile Include="Converters\PublisherEditingDisplayConverter.cs" />
     <Compile Include="Models\Book.cs" />
     <Compile Include="Models\Column.cs" />
     <Compile Include="Models\DatabaseInteraction.cs" />

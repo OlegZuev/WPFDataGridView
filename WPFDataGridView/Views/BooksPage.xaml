@@ -15,13 +15,34 @@
     <Page.Resources>
         <converters:ValidationToVisibilityConverter x:Key="ValidationToVisibilityConverter" />
         <converters:EventArgsConverter x:Key="EventArgsConverter" />
+        <CollectionViewSource x:Key="Publishers" Source="{Binding Publishers}" />
+        <converters:PublisherEditingDisplayConverter x:Key="PublisherEditingDisplayConverter" />
     </Page.Resources>
+
     <Grid>
-        <DataGrid x:Name="DataGrid" ItemsSource="{Binding Books}" AutoGenerateColumns="False">
+        <DataGrid x:Name="DataGrid" ItemsSource="{Binding Books}" AutoGenerateColumns="False" SelectionMode="Single">
+            <!-- Столбцы, которые отображают информацию о книге -->
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ISBN" Binding="{Binding ISBN, UpdateSourceTrigger=PropertyChanged}"
+                                    Width="115"
                                     ElementStyle="{StaticResource TextBlockValidator}"
                                     EditingElementStyle="{StaticResource TextBoxValidator}" />
+                <DataGridComboBoxColumn Header="Publisher" ItemsSource="{Binding Source={StaticResource Publishers}}"
+                                        DisplayMemberPath="Name"
+                                        SelectedValuePath="Id"
+                                        SelectedValueBinding="{Binding PublisherId, UpdateSourceTrigger=PropertyChanged}">
+                    <DataGridComboBoxColumn.EditingElementStyle>
+                        <Style TargetType="ComboBox">
+                            <Setter Property="ItemTemplate">
+                                <Setter.Value>
+                                    <DataTemplate>
+                                        <ContentPresenter Content="{Binding Converter={StaticResource PublisherEditingDisplayConverter}}"/>
+                                    </DataTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </DataGridComboBoxColumn.EditingElementStyle>
+                </DataGridComboBoxColumn>
                 <DataGridTextColumn Header="Name" Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
                                     ElementStyle="{StaticResource TextBlockValidator}"
                                     EditingElementStyle="{StaticResource TextBoxValidator}"
@@ -45,10 +66,12 @@
                                     EditingElementStyle="{StaticResource TextBoxValidator}" />
             </DataGrid.Columns>
 
+            <!-- Валидатор-заглушка для отображение ошибок через ReactiveValidator -->
             <DataGrid.RowValidationRules>
                 <validators:BookValidator ValidatesOnTargetUpdated="True" ValidationStep="UpdatedValue" />
             </DataGrid.RowValidationRules>
 
+            <!-- Значок ошибки слева от строки -->
             <DataGrid.RowValidationErrorTemplate>
                 <ControlTemplate>
                     <Grid Margin="0,-2,0,-2"
@@ -64,6 +87,7 @@
                 </ControlTemplate>
             </DataGrid.RowValidationErrorTemplate>
 
+            <!-- Обработка событий DataGrid -->
             <b:Interaction.Triggers>
                 <b:EventTrigger EventName="AddingNewItem">
                     <b:InvokeCommandAction Command="{Binding DataGridAddingNewItemCommand}"
@@ -77,6 +101,9 @@
                     <b:InvokeCommandAction Command="{Binding PreviewKeyDownCommand}"
                                            EventArgsConverter="{StaticResource EventArgsConverter}"
                                            EventArgsConverterParameter="{Binding ElementName=DataGrid}" />
+                </b:EventTrigger>
+                <b:EventTrigger EventName="CellEditEnding">
+                    <b:InvokeCommandAction Command="{Binding DataGridCellEditEndingCommand}" PassEventArgsToCommand="True"/>
                 </b:EventTrigger>
             </b:Interaction.Triggers>
         </DataGrid>
